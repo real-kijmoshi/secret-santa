@@ -2,6 +2,7 @@ const express = require("express");
 const jsonwebtoken = require("jsonwebtoken");
 const db = require("./db");
 const bcrypt = require("bcrypt");
+const config = require("./config.json");
 
 require("dotenv").config();
 
@@ -133,16 +134,21 @@ app.post("/groups", async (req, res) => {
     }
 
     const userGroups = await user.getGroups();
-    if(userGroups.length >= 5) {
+    if(userGroups.length >= config["max-groups"]) {
         return res.status(400).json({ message: "You have reached the limit of groups" });
     }
+
+
 
     try {
         await db.Group.create({ name, budget, ownerId: req.user.id });
         const group = await db.Group.findOne({ where: { name } });
         await user.addGroup(group);
-        res.status(201).json({ message: "Group created successfully" });
+        res.status(201).json({ message: "Group created successfully", id: group.id });
     } catch (error) {
+        if(error.name === "SequelizeUniqueConstraintError") {
+            return res.status(400).json({ message: "Group with that name already exists" });
+        }
         res.status(400).json({ message: error.message });
     }
 });
