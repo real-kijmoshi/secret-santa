@@ -91,6 +91,24 @@ app.get("/groups", async (req, res) => {
     res.json(groups.map((group) => group.name));
 });
 
+app.get("/groups/:id/users", async (req, res) => {
+    try {
+        const group = await db.Group.findByPk(req.params.id);
+        
+        if (!group) {
+            res.status(404).json({ message: "Group not found" });
+        }
+        
+        const users = await group.getUsers();
+        
+        res.json(users.map((user) => user.username));
+    } catch (error) {
+        return res.status(404).json({ message: "Group not found" });
+    }
+});
+
+
+
 // Auth Middleware
 app.use((req, res, next) => {
     const authHeader = req.headers["authorization"];
@@ -151,6 +169,17 @@ app.post("/groups", async (req, res) => {
         }
         res.status(400).json({ message: error.message });
     }
+});
+
+
+app.get("/me/groups", async (req, res) => {
+    const user = await db.User.findByPk(req.user.id);
+    if (!user) {
+        return res.status(404).json({ message: "User not found" });
+    }
+
+    const groups = await user.getGroups();
+    res.json(groups.map((group) => ({ name: group.name, budget: group.budget, id: group.id })));
 });
 
 
