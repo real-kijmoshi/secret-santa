@@ -34,6 +34,7 @@ runner
             password: "invalid"
         })
     });
+
     return response.status;
 }, [400, 404], "between")
 
@@ -61,8 +62,16 @@ runner
         }
     });
     return response.status;
-}, 200, "equal");
+}, 200, "equal")
 
+.it("should return an array of groups", async () => {
+    const response = await fetch("http://localhost:3000/groups");
+    const data = await response.json();
+
+    return data;
+}, "object", "type")
+
+;
 // Run tests
 (async () => {
     await runner.runTests();

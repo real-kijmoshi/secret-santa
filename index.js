@@ -85,6 +85,11 @@ app.post("/register", async (req, res) => {
     }
 });
 
+app.get("/groups", async (req, res) => {
+    const groups = await db.Group.findAll();
+    res.json(groups.map((group) => group.name));
+});
+
 // Auth Middleware
 app.use((req, res, next) => {
     const authHeader = req.headers["authorization"];
@@ -106,6 +111,48 @@ app.use((req, res, next) => {
 app.get("/protected", (req, res) => {
     res.json({ message: `Welcome, ${req.user.username}!`, user: req.user });
 });
+
+app.post("/groups", async (req, res) => {
+    const { name, budget } = req.body;
+
+    if (!name || !budget) {
+        return res.status(400).json({ message: "Invalid request" });
+    }
+
+    const user = await db.User.findByPk(req.user.id);
+    if (!user) {
+        return res.status(404).json({ message: "User not found" });
+    }
+
+    if(name.length < 4 || name.length > 32) {
+        return res.status(400).json({ message: "Name must be between 4 and 32 characters long" });
+    }
+
+    if(budget < 0) {
+        return res.status(400).json({ message: "Budget must be a positive number" });
+    }
+
+    const userGroups = await user.getGroups();
+    if(userGroups.length >= 5) {
+        return res.status(400).json({ message: "You have reached the limit of groups" });
+    }
+
+    try {
+        await db.Group.create({ name, budget, ownerId: req.user.id });
+        const group = await db.Group.findOne({ where: { name } });
+        await user.addGroup(group);
+        res.status(201).json({ message: "Group created successfully" });
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+});
+
+
+
+    
+
+
+
 
 app.listen(3000, () => {
     console.log("Server is running on port 3000");

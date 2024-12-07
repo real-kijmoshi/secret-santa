@@ -76,10 +76,6 @@ class TerminalUI {
         console.log(`${this.COLORS.FG.RED}Failed:${this.COLORS.RESET} ${failed} tests`);
         console.log(`Total: ${total} tests`);
         
-        console.log(`\n${this.COLORS.BRIGHT}Progress:${this.COLORS.RESET} ` + 
-            this.progressBar(passed, total) + 
-            ` ${passRate}%`
-        );
         
         console.log(`\n${this.COLORS.FG.CYAN}Duration:${this.COLORS.RESET} ${duration.toFixed(2)}s`);
     }
